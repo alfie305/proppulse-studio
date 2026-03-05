@@ -21,7 +21,8 @@
 }
 
 .plan-card.plan-pro {
-    border-color: rgba(43, 238, 121, 0.35);
+    border-color: rgba(168, 85, 247, 0.3);
+    box-shadow: var(--shadow-glow);
 }
 
 .plan-header {
@@ -84,12 +85,12 @@
     display: inline-flex;
     align-items: center;
     padding: 2px 8px;
-    background: var(--bg-surface-3);
+    background: #F3E8FF;
     border-radius: var(--radius-full);
     font-size: 0.6875rem;
     font-weight: 700;
     font-family: var(--font-mono);
-    color: var(--accent);
+    color: #7C3AED;
     min-width: 36px;
     justify-content: center;
 }
@@ -103,7 +104,7 @@
 
 .bundle-card {
     position: relative;
-    background: var(--bg-surface-2);
+    background: var(--bg-surface);
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
     padding: 16px;
@@ -111,10 +112,11 @@
     flex-direction: column;
     align-items: center;
     text-align: center;
+    box-shadow: var(--shadow-card);
 }
 
 .bundle-card.popular {
-    border-color: rgba(43, 238, 121, 0.4);
+    border-color: rgba(168, 85, 247, 0.35);
     box-shadow: var(--shadow-glow);
 }
 
@@ -123,8 +125,8 @@
     top: -11px;
     left: 50%;
     transform: translateX(-50%);
-    background: var(--accent);
-    color: #09100d;
+    background: var(--gradient);
+    color: #FFFFFF;
     padding: 3px 10px;
     border-radius: var(--radius-full);
     font-size: 0.625rem;
@@ -143,7 +145,10 @@
 }
 
 .bundle-credits span {
-    color: var(--accent);
+    background: var(--gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
 .bundle-label {

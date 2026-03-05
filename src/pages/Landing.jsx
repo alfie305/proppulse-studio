@@ -1,7 +1,89 @@
-import { Link } from 'react-router-dom'
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
-import { Zap, TrendingUp, Image, Download, Clock, Shield } from 'lucide-react'
+import { Zap, TrendingUp, Image, Download, Clock, Shield, X, Loader } from 'lucide-react'
 import './Landing.css'
+
+const AUTH_ERRORS = {
+    'auth/invalid-credential': 'Incorrect email or password.',
+    'auth/user-not-found': 'No account found with this email.',
+    'auth/wrong-password': 'Incorrect email or password.',
+    'auth/invalid-email': 'Please enter a valid email address.',
+    'auth/too-many-requests': 'Too many attempts. Please try again later.',
+}
+
+function LoginModal({ onClose }) {
+    const { login, loginWithGoogle } = useApp()
+    const navigate = useNavigate()
+    const [email, setEmail] = useState('')
+    const [password, setPassword] = useState('')
+    const [loading, setLoading] = useState(false)
+    const [error, setError] = useState(null)
+
+    const handleLogin = async (e) => {
+        e.preventDefault()
+        setError(null)
+        setLoading(true)
+        try {
+            await login(email, password)
+            navigate('/studio')
+        } catch (err) {
+            setError(AUTH_ERRORS[err.code] ?? 'Something went wrong. Please try again.')
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    const handleGoogle = async () => {
+        setError(null)
+        setLoading(true)
+        try {
+            const { isNewUser } = await loginWithGoogle()
+            navigate(isNewUser ? '/onboarding' : '/studio')
+        } catch (err) {
+            if (err.code !== 'auth/popup-closed-by-user') {
+                setError(AUTH_ERRORS[err.code] ?? 'Something went wrong. Please try again.')
+            }
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    return (
+        <div className="modal-backdrop" onClick={onClose}>
+            <div className="modal-card" onClick={e => e.stopPropagation()}>
+                <div className="modal-header">
+                    <h3>Sign in to PropPulse</h3>
+                    <button className="modal-close" onClick={onClose}><X size={16} /></button>
+                </div>
+                <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                    <div className="form-group">
+                        <label className="form-label">Email</label>
+                        <input className="form-input" type="email" placeholder="you@yourdomain.com"
+                            value={email} onChange={e => setEmail(e.target.value)} required />
+                    </div>
+                    <div className="form-group">
+                        <label className="form-label">Password</label>
+                        <input className="form-input" type="password" placeholder="Your password"
+                            value={password} onChange={e => setPassword(e.target.value)} required />
+                    </div>
+                    {error && <p className="auth-error">{error}</p>}
+                    <button className="btn btn-primary" type="submit" disabled={loading} style={{ justifyContent: 'center' }}>
+                        {loading ? <Loader size={14} className="spin" /> : 'Sign In'}
+                    </button>
+                </form>
+                <div className="sso-divider"><span>or</span></div>
+                <button className="btn btn-secondary" onClick={handleGoogle} disabled={loading}
+                    style={{ width: '100%', justifyContent: 'center', gap: '10px' }}>
+                    <span style={{ fontSize: '18px' }}>G</span> Continue with Google
+                </button>
+                <p style={{ textAlign: 'center', marginTop: '16px', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                    No account? <Link to="/onboarding" onClick={onClose} style={{ color: 'var(--accent)' }}>Sign up free</Link>
+                </p>
+            </div>
+        </div>
+    )
+}
 
 const FEATURES = [
     { icon: <TrendingUp size={22} />, title: 'Live News Hooks', desc: 'Top 5 real estate stories refreshed daily — injected into your content automatically.' },
@@ -24,10 +106,11 @@ const THEMES = [
 ]
 
 export default function Landing() {
-    const { login } = useApp()
+    const [showLogin, setShowLogin] = useState(false)
 
     return (
         <div className="landing">
+            {showLogin && <LoginModal onClose={() => setShowLogin(false)} />}
             {/* Hero */}
             <section className="hero">
                 <div className="hero-bg" aria-hidden />
@@ -42,7 +125,7 @@ export default function Landing() {
                         </p>
                         <div className="hero-actions animate-fade" style={{ animationDelay: '0.3s' }}>
                             <Link to="/onboarding" className="btn btn-primary btn-lg">Start Free →</Link>
-                            <button className="btn btn-ghost btn-lg" onClick={login}>Demo the Studio</button>
+                            <button className="btn btn-ghost btn-lg" onClick={() => setShowLogin(true)}>Demo the Studio</button>
                         </div>
                         <p className="hero-disclaimer">Free tier available · No credit card required to start</p>
                     </div>
@@ -177,7 +260,7 @@ export default function Landing() {
                     <p>Join hundreds of agents who generate branded content in minutes, not days.</p>
                     <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap', marginTop: '24px' }}>
                         <Link to="/onboarding" className="btn btn-primary btn-lg">Create Free Account</Link>
-                        <button className="btn btn-ghost btn-lg" onClick={login}>Try the Studio Demo</button>
+                        <button className="btn btn-ghost btn-lg" onClick={() => setShowLogin(true)}>Try the Studio Demo</button>
                     </div>
                 </div>
             </section>

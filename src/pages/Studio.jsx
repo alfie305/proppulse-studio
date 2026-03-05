@@ -1,15 +1,56 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState } from 'react'
 import { useApp } from '../context/AppContext'
-import { Navigate } from 'react-router-dom'
+import { Navigate, Link } from 'react-router-dom'
 import {
     Flame, Clock, Zap, Copy, Check, Download,
-    RefreshCw, Play, ChevronDown, X, AlertTriangle, ImageIcon
+    RefreshCw, Play, ChevronDown, AlertTriangle, ImageIcon, MapPin, Settings
 } from 'lucide-react'
 import {
-    NEWS_STORIES, CAMPAIGN_TYPES, OUTPUT_FORMATS,
-    GENERATION_STEPS, MOCK_GENERATED_ASSETS
+    CAMPAIGN_TYPES, OUTPUT_FORMATS,
+    GENERATION_STEPS,
 } from '../data/mockData'
+import { auth } from '../lib/firebase'
+import { useNewsFeed } from '../hooks/useNewsFeed'
 import './Studio.css'
+
+// market filter tabs: 'all' | 'national' | market name
+const ALL_TAB = 'all'
+const NATIONAL_TAB = 'national'
+
+function MarketFilterTabs({ marketAreas, activeTab, onTabChange }) {
+    return (
+        <div className="market-filter-row">
+            <div className="market-tabs">
+                <button
+                    className={`market-tab ${activeTab === ALL_TAB ? 'active' : ''}`}
+                    onClick={() => onTabChange(ALL_TAB)}
+                >
+                    All
+                </button>
+                <button
+                    className={`market-tab ${activeTab === NATIONAL_TAB ? 'active' : ''}`}
+                    onClick={() => onTabChange(NATIONAL_TAB)}
+                >
+                    National
+                </button>
+                {marketAreas.map(market => (
+                    <button
+                        key={market}
+                        className={`market-tab ${activeTab === market ? 'active' : ''}`}
+                        onClick={() => onTabChange(market)}
+                    >
+                        <MapPin size={9} />
+                        {market}
+                    </button>
+                ))}
+            </div>
+            <Link to="/brand-kit" className="market-manage-link" title="Manage market areas in Brand Kit">
+                <Settings size={12} />
+                Manage
+            </Link>
+        </div>
+    )
+}
 
 function NewsCard({ story, selected, onSelect }) {
     return (
@@ -47,13 +88,7 @@ function CampaignBtn({ campaign, selected, onSelect }) {
 }
 
 function GeneratedAssetCard({ asset, onRefine, agentIsFree }) {
-    const [copied, setCopied] = useState(false)
     const [formatOpen, setFormatOpen] = useState(false)
-
-    const copyCaption = () => {
-        setCopied(true)
-        setTimeout(() => setCopied(false), 2000)
-    }
 
     const platformColors = {
         'Instagram Feed': '#e1306c',
@@ -62,20 +97,26 @@ function GeneratedAssetCard({ asset, onRefine, agentIsFree }) {
         'Email Flyer': '#f97316',
     }
 
+    const handleDownload = (e) => {
+        e.preventDefault()
+        setFormatOpen(false)
+        const a = document.createElement('a')
+        a.href = asset.url
+        a.download = `${asset.platformId}-variant-${asset.variant}.png`
+        a.target = '_blank'
+        a.rel = 'noopener'
+        a.click()
+    }
+
     return (
         <div className="asset-card animate-fade" style={{ animationDelay: `${(asset.variant - 1) * 0.07}s` }}>
             {/* Image preview */}
-            <div className="asset-preview" style={{ background: `linear-gradient(135deg, ${asset.gradientFrom}, ${asset.gradientTo})` }}>
-                <div className="asset-brand-overlay">
-                    <div className="asset-agent-dot" style={{ background: asset.accent }} />
-                    <div className="asset-lines">
-                        <div className="asset-line l1" style={{ background: `${asset.accent}60` }} />
-                        <div className="asset-line l2" />
-                    </div>
-                    <div className="asset-stamp">
-                        <span style={{ color: asset.accent }}>●</span> Agent Stamped
-                    </div>
-                </div>
+            <div className="asset-preview" style={{ background: '#111', overflow: 'hidden' }}>
+                <img
+                    src={asset.url}
+                    alt={`Variant ${asset.variant} — ${asset.platform}`}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                />
                 {agentIsFree && <div className="watermark-badge">Watermark</div>}
                 <div className="asset-var-num">Var {asset.variant}</div>
                 <div className="asset-platform-badge" style={{ background: platformColors[asset.platform] || '#555' }}>
@@ -96,12 +137,10 @@ function GeneratedAssetCard({ asset, onRefine, agentIsFree }) {
                         </button>
                         {formatOpen && (
                             <div className="format-menu">
-                                {OUTPUT_FORMATS.map(f => (
-                                    <button key={f.id} className="format-item" onClick={() => setFormatOpen(false)}>
-                                        <span>{f.label}</span>
-                                        <span className="format-dims">{f.dims}</span>
-                                    </button>
-                                ))}
+                                <button className="format-item" onClick={handleDownload}>
+                                    <span>{asset.platform}</span>
+                                    <span className="format-dims">{asset.dims}</span>
+                                </button>
                             </div>
                         )}
                     </div>
@@ -147,6 +186,7 @@ export default function Studio() {
 
     if (!isAuthenticated) return <Navigate to="/onboarding" replace />
 
+    const [activeMarketTab, setActiveMarketTab] = useState(ALL_TAB)
     const [selectedNews, setSelectedNews] = useState(null)
     const [selectedCampaign, setSelectedCampaign] = useState(null)
     const [generating, setGenerating] = useState(false)
@@ -154,22 +194,87 @@ export default function Studio() {
     const [genProgress, setGenProgress] = useState(0)
     const [generatedAssets, setGeneratedAssets] = useState([])
 
+    const { stories, loading: newsLoading } = useNewsFeed(agent.marketAreas)
+
+    const filteredStories = stories.filter(story => {
+        if (activeMarketTab === ALL_TAB) return true
+        if (activeMarketTab === NATIONAL_TAB) return story.market === null
+        return story.market === activeMarketTab
+    })
+
+    // Clear selected news if it's no longer visible in the current tab
+    const handleTabChange = (tab) => {
+        setActiveMarketTab(tab)
+        if (selectedNews) {
+            const visible = stories.filter(s => {
+                if (tab === ALL_TAB) return true
+                if (tab === NATIONAL_TAB) return s.market === null
+                return s.market === tab
+            })
+            if (!visible.find(s => s.id === selectedNews.id)) {
+                setSelectedNews(null)
+            }
+        }
+    }
+
+    const [genError, setGenError] = useState(null)
+
     const generate = async () => {
         if (!selectedCampaign || isOutOfCredits) return
         setGenerating(true)
         setGenStep(0)
         setGenProgress(0)
         setGeneratedAssets([])
+        setGenError(null)
 
-        for (let i = 0; i < GENERATION_STEPS.length; i++) {
-            await new Promise(r => setTimeout(r, 600 + Math.random() * 400))
-            setGenStep(i + 1)
-            setGenProgress(Math.round(((i + 1) / GENERATION_STEPS.length) * 100))
+        try {
+            const idToken = await auth.currentUser.getIdToken()
+
+            // Animate steps while waiting for the real API (~30-45s)
+            let stepInterval = setInterval(() => {
+                setGenStep(prev => {
+                    const next = Math.min(prev + 1, GENERATION_STEPS.length - 2)
+                    setGenProgress(Math.round((next / GENERATION_STEPS.length) * 100))
+                    return next
+                })
+            }, 3500)
+
+            const res = await fetch(`${import.meta.env.VITE_API_URL}/generate`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${idToken}`,
+                },
+                body: JSON.stringify({
+                    campaignType: selectedCampaign.id,
+                    theme: agent.brandKit?.theme ?? 'luxury-dark',
+                    primaryColor: agent.brandKit?.primaryColor ?? '#2bee79',
+                    newsHook: selectedNews ?? null,
+                }),
+            })
+
+            clearInterval(stepInterval)
+
+            if (!res.ok) {
+                const body = await res.json().catch(() => ({ error: res.statusText }))
+                throw new Error(body.error ?? res.statusText)
+            }
+
+            const { assets, creditsRemaining } = await res.json()
+
+            setGenStep(GENERATION_STEPS.length)
+            setGenProgress(100)
+            setGeneratedAssets(assets)
+
+            // Sync credit count from server truth
+            const serverDeducted = (agent.credits ?? 0) - creditsRemaining
+            if (serverDeducted > 0) deductCredits(serverDeducted)
+
+        } catch (err) {
+            setGenError(err.message)
+        } finally {
+            setGenerating(false)
         }
-
-        deductCredits(12)
-        setGeneratedAssets(MOCK_GENERATED_ASSETS)
-        setGenerating(false)
     }
 
     const handleRefine = (asset) => {
@@ -183,10 +288,28 @@ export default function Studio() {
             <aside className="studio-sidebar">
                 <div className="sidebar-section">
                     <div className="sidebar-section-label">📰 Live News Feed</div>
+                    <MarketFilterTabs
+                        marketAreas={agent.marketAreas}
+                        activeTab={activeMarketTab}
+                        onTabChange={handleTabChange}
+                    />
                     <div className="news-list">
-                        {NEWS_STORIES.map(story => (
-                            <NewsCard key={story.id} story={story} selected={selectedNews?.id === story.id} onSelect={setSelectedNews} />
-                        ))}
+                        {newsLoading ? (
+                            <>
+                                <div className="news-skeleton" />
+                                <div className="news-skeleton" />
+                                <div className="news-skeleton" />
+                            </>
+                        ) : filteredStories.length === 0 ? (
+                            <div className="news-empty">
+                                <MapPin size={16} />
+                                <span>No stories for this market yet. Check back soon or select another tab.</span>
+                            </div>
+                        ) : (
+                            filteredStories.map(story => (
+                                <NewsCard key={story.id} story={story} selected={selectedNews?.id === story.id} onSelect={setSelectedNews} />
+                            ))
+                        )}
                     </div>
                 </div>
 
@@ -226,6 +349,11 @@ export default function Studio() {
                         {isOutOfCredits && (
                             <span className="alert alert-danger" style={{ padding: '7px 12px', gap: '6px' }}>
                                 <AlertTriangle size={13} /> Out of credits
+                            </span>
+                        )}
+                        {genError && (
+                            <span className="alert alert-danger" style={{ padding: '7px 12px', gap: '6px', maxWidth: '280px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                <AlertTriangle size={13} /> {genError}
                             </span>
                         )}
                         <button

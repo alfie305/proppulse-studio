@@ -1,5 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
-import { AppProvider } from './context/AppContext'
+import { AppProvider, useApp } from './context/AppContext'
 import Navbar from './components/Navbar'
 import Landing from './pages/Landing'
 import Onboarding from './pages/Onboarding'
@@ -8,8 +8,19 @@ import BrandKit from './pages/BrandKit'
 import AssetLibrary from './pages/AssetLibrary'
 import Billing from './pages/Billing'
 import Admin from './pages/Admin'
+import { Loader } from 'lucide-react'
 
 function AppInner() {
+    const { authLoading } = useApp()
+
+    if (authLoading) {
+        return (
+            <div className="auth-loading">
+                <Loader size={32} className="spin" />
+            </div>
+        )
+    }
+
     return (
         <>
             <Navbar />

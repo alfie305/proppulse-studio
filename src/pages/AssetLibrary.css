@@ -57,7 +57,7 @@
 }
 
 .lib-card:hover {
-    border-color: rgba(43, 238, 121, 0.3);
+    border-color: rgba(168, 85, 247, 0.25);
     transform: translateY(-2px);
     box-shadow: var(--shadow-glow);
 }
@@ -149,7 +149,7 @@
 }
 
 .lib-list-row:hover {
-    border-color: rgba(43, 238, 121, 0.2);
+    border-color: rgba(168, 85, 247, 0.2);
 }
 
 .lib-list-thumb {

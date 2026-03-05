@@ -1,8 +1,10 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Navigate } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
-import { Upload, Save, Check } from 'lucide-react'
-import { VISUAL_THEMES, CAPTION_TONES } from '../data/mockData'
+import { doc, updateDoc } from 'firebase/firestore'
+import { db } from '../lib/firebase'
+import { Upload, Save, Check, X, MapPin, Plus } from 'lucide-react'
+import { VISUAL_THEMES, CAPTION_TONES, SUGGESTED_MARKETS } from '../data/mockData'
 import './BrandKit.css'
 
 const UPLOAD_SLOTS = [
@@ -14,8 +16,116 @@ const UPLOAD_SLOTS = [
     { key: 'award', label: 'Award / Badge', icon: '🏆', required: false },
 ]
 
+function MarketAreaSelector({ markets, onAdd, onRemove }) {
+    const [query, setQuery] = useState('')
+    const [open, setOpen] = useState(false)
+    const inputRef = useRef(null)
+    const containerRef = useRef(null)
+
+    const suggestions = query.length > 0
+        ? SUGGESTED_MARKETS.filter(m =>
+            m.toLowerCase().includes(query.toLowerCase()) &&
+            !markets.includes(m)
+        ).slice(0, 6)
+        : []
+
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter' && query.trim()) {
+            e.preventDefault()
+            const match = SUGGESTED_MARKETS.find(m => m.toLowerCase() === query.trim().toLowerCase())
+            onAdd(match || query.trim())
+            setQuery('')
+            setOpen(false)
+        }
+        if (e.key === 'Escape') {
+            setOpen(false)
+        }
+    }
+
+    const handleSelect = (market) => {
+        onAdd(market)
+        setQuery('')
+        setOpen(false)
+        inputRef.current?.focus()
+    }
+
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (containerRef.current && !containerRef.current.contains(e.target)) {
+                setOpen(false)
+            }
+        }
+        document.addEventListener('mousedown', handleClickOutside)
+        return () => document.removeEventListener('mousedown', handleClickOutside)
+    }, [])
+
+    return (
+        <div className="market-selector" ref={containerRef}>
+            {/* Current market chips */}
+            {markets.length > 0 && (
+                <div className="market-chips">
+                    {markets.map(market => (
+                        <span key={market} className="market-chip">
+                            <MapPin size={10} />
+                            {market}
+                            <button
+                                className="market-chip-remove"
+                                onClick={() => onRemove(market)}
+                                title={`Remove ${market}`}
+                            >
+                                <X size={10} />
+                            </button>
+                        </span>
+                    ))}
+                </div>
+            )}
+
+            {/* Search / add input */}
+            <div className="market-input-wrap">
+                <MapPin size={13} className="market-input-icon" />
+                <input
+                    ref={inputRef}
+                    className="market-input"
+                    value={query}
+                    onChange={e => { setQuery(e.target.value); setOpen(true) }}
+                    onFocus={() => setOpen(true)}
+                    onKeyDown={handleKeyDown}
+                    placeholder={markets.length === 0 ? 'Search city or neighborhood…' : 'Add another market…'}
+                />
+                {query && (
+                    <button className="market-input-clear" onClick={() => { setQuery(''); setOpen(false) }}>
+                        <X size={12} />
+                    </button>
+                )}
+            </div>
+
+            {/* Suggestions dropdown */}
+            {open && suggestions.length > 0 && (
+                <div className="market-dropdown">
+                    {suggestions.map(market => (
+                        <button key={market} className="market-suggestion" onClick={() => handleSelect(market)}>
+                            <MapPin size={11} />
+                            {market}
+                        </button>
+                    ))}
+                    {query.trim() && !SUGGESTED_MARKETS.some(m => m.toLowerCase() === query.trim().toLowerCase()) && (
+                        <button className="market-suggestion market-suggestion-custom" onClick={() => handleSelect(query.trim())}>
+                            <Plus size={11} />
+                            Add "{query.trim()}"
+                        </button>
+                    )}
+                </div>
+            )}
+
+            <span className="form-hint" style={{ marginTop: '6px', display: 'block' }}>
+                These markets drive your local news feed in Studio. Not included in image prompts.
+            </span>
+        </div>
+    )
+}
+
 export default function BrandKit() {
-    const { agent, setAgent, brandKit, updateBrandKit, isAuthenticated } = useApp()
+    const { agent, setAgent, brandKit, updateBrandKit, isAuthenticated, addMarketArea, removeMarketArea } = useApp()
     if (!isAuthenticated) return <Navigate to="/onboarding" replace />
 
     const [saved, setSaved] = useState(false)
@@ -24,15 +134,24 @@ export default function BrandKit() {
     })
     const [info, setInfo] = useState({
         name: agent.name, phone: agent.phone, license: agent.license,
-        brokerage: agent.brokerage, website: agent.website, marketAreas: agent.marketAreas,
+        brokerage: agent.brokerage, website: agent.website,
     })
     const [theme, setTheme] = useState(brandKit.theme)
     const [tone, setTone] = useState(brandKit.captionTone)
     const [primaryColor, setPrimaryColor] = useState(brandKit.primaryColor)
 
-    const handleSave = () => {
+    const handleSave = async () => {
+        const brandKitUpdate = { theme, captionTone: tone, primaryColor }
         setAgent(prev => ({ ...prev, ...info }))
-        updateBrandKit({ theme, captionTone: tone, primaryColor })
+        updateBrandKit(brandKitUpdate)
+        try {
+            await updateDoc(doc(db, 'agents', agent.uid), {
+                ...info,
+                brandKit: brandKitUpdate,
+            })
+        } catch (err) {
+            console.error('BrandKit save failed:', err)
+        }
         setSaved(true)
         setTimeout(() => setSaved(false), 2500)
     }
@@ -109,8 +228,11 @@ export default function BrandKit() {
                                 </div>
                                 <div className="form-group">
                                     <label className="form-label">Market Areas</label>
-                                    <input id="bk-markets" className="form-input" value={info.marketAreas} onChange={e => setInfo(p => ({ ...p, marketAreas: e.target.value }))} placeholder="Beverly Hills, West Hollywood" />
-                                    <span className="form-hint">Comma-separated markets. Used in image context only, never in contact stamp.</span>
+                                    <MarketAreaSelector
+                                        markets={agent.marketAreas}
+                                        onAdd={addMarketArea}
+                                        onRemove={removeMarketArea}
+                                    />
                                 </div>
                             </div>
                         </div>

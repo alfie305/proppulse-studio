@@ -7,13 +7,41 @@ export const mockAgent = {
     license: 'DRE #02193847',
     brokerage: 'Compass Real Estate',
     website: 'alfiereynolds.com',
-    marketAreas: 'Beverly Hills, West Hollywood, Bel Air',
+    marketAreas: ['Beverly Hills', 'West Hollywood', 'Bel Air'],
     avatarInitials: 'AR',
     plan: 'paid', // 'free' | 'paid'
     credits: 68,
     creditMax: 120,
     memberSince: 'January 2026',
 }
+
+// Suggested markets for autocomplete — covers major US metros agents commonly serve
+export const SUGGESTED_MARKETS = [
+    // California
+    'Beverly Hills', 'West Hollywood', 'Bel Air', 'Santa Monica', 'Malibu',
+    'Brentwood', 'Pacific Palisades', 'Venice', 'Culver City', 'Pasadena',
+    'Calabasas', 'Sherman Oaks', 'Studio City', 'Los Feliz', 'Silver Lake',
+    'San Francisco', 'Oakland', 'Berkeley', 'San Jose', 'Palo Alto',
+    'Menlo Park', 'Saratoga', 'Napa', 'Sonoma', 'Carmel',
+    'San Diego', 'La Jolla', 'Del Mar', 'Coronado', 'Encinitas',
+    'Newport Beach', 'Laguna Beach', 'Irvine', 'Huntington Beach', 'Dana Point',
+    // New York
+    'Manhattan', 'Brooklyn', 'Hamptons', 'Westchester', 'Greenwich',
+    'Upper East Side', 'Tribeca', 'SoHo', 'Park Slope', 'Hoboken',
+    // Florida
+    'Miami Beach', 'Coral Gables', 'Coconut Grove', 'Brickell', 'Palm Beach',
+    'Naples', 'Sarasota', 'Tampa', 'St. Petersburg', 'Orlando',
+    // Texas
+    'Austin', 'Dallas', 'Houston', 'San Antonio', 'Plano',
+    'Westlake Hills', 'Tarrytown', 'Highland Park', 'River Oaks', 'Frisco',
+    // Pacific Northwest
+    'Seattle', 'Bellevue', 'Kirkland', 'Mercer Island', 'Redmond',
+    'Portland', 'Lake Oswego', 'Beaverton',
+    // Other major metros
+    'Chicago', 'Boston', 'Washington DC', 'Denver', 'Boulder',
+    'Scottsdale', 'Paradise Valley', 'Phoenix', 'Las Vegas', 'Henderson',
+    'Nashville', 'Atlanta', 'Charlotte', 'Raleigh', 'Minneapolis',
+]
 
 export const mockBrandKit = {
     hasHeadshot: true,
@@ -28,6 +56,7 @@ export const mockBrandKit = {
     captionTone: 'professional', // one of 4 tones
 }
 
+// market: null = national story; market: 'City Name' = local market story
 export const NEWS_STORIES = [
     {
         id: 'news-1',
@@ -37,6 +66,7 @@ export const NEWS_STORIES = [
         summary: 'The 30-year fixed-rate mortgage fell to 6.4% this week, offering renewed purchasing power for buyers who had been priced out. Economists attribute the dip to cooler-than-expected jobs data and Fed commentary.',
         source: 'Reuters',
         recency: '2h ago',
+        market: null,
     },
     {
         id: 'news-2',
@@ -46,6 +76,7 @@ export const NEWS_STORIES = [
         summary: 'New listing volume on the West Coast jumped 18% year-over-year in February, giving buyers more options. Agents report multiple-offer situations declining as competition moderates.',
         source: 'NAR',
         recency: '5h ago',
+        market: null,
     },
     {
         id: 'news-3',
@@ -55,6 +86,7 @@ export const NEWS_STORIES = [
         summary: 'The median sale price in Los Angeles County reached $985,000 last month — a 12% year-over-year increase. Luxury inventory under $2M sold fastest, with a median of 9 days on market.',
         source: 'CAR',
         recency: '8h ago',
+        market: null,
     },
     {
         id: 'news-4',
@@ -64,6 +96,7 @@ export const NEWS_STORIES = [
         summary: 'Return-to-office mandates from major tech employers are shifting buyer preferences back toward urban cores and commuter corridors, reversing the pandemic-era suburban surge.',
         source: 'Bloomberg',
         recency: '1d ago',
+        market: null,
     },
     {
         id: 'news-5',
@@ -73,6 +106,70 @@ export const NEWS_STORIES = [
         summary: 'Federal Reserve minutes released Wednesday indicate committee members are projecting two potential cuts in the second half of 2026 contingent on continued inflation softening.',
         source: 'WSJ',
         recency: '1d ago',
+        market: null,
+    },
+    // Beverly Hills local stories
+    {
+        id: 'news-bh-1',
+        hot: true,
+        category: 'Local Data',
+        headline: 'Beverly Hills Luxury Condos See 23% Price Jump in Q1 2026',
+        summary: 'Luxury condominium prices in 90210 surged 23% year-over-year in Q1 2026, driven by limited inventory and international buyer demand. Only 12 units above $5M remain available citywide.',
+        source: 'LA Times',
+        recency: '3h ago',
+        market: 'Beverly Hills',
+    },
+    {
+        id: 'news-bh-2',
+        hot: false,
+        category: 'Trends',
+        headline: 'Beverly Hills New Construction Pipeline Slows Amid Rising Costs',
+        summary: 'Building permits in Beverly Hills dropped 31% in February as construction costs remain elevated. Analysts predict continued inventory tightness for luxury single-family homes through mid-2026.',
+        source: 'Curbed LA',
+        recency: '4h ago',
+        market: 'Beverly Hills',
+    },
+    // West Hollywood local stories
+    {
+        id: 'news-weho-1',
+        hot: true,
+        category: 'Local Data',
+        headline: 'West Hollywood Median Days on Market Drops to 8',
+        summary: 'WeHo properties are moving fast with a median of just 8 days listed, down from 21 days a year ago. Walkability scores and proximity to entertainment corridors are cited as major drivers.',
+        source: 'CAR',
+        recency: '6h ago',
+        market: 'West Hollywood',
+    },
+    {
+        id: 'news-weho-2',
+        hot: false,
+        category: 'Trends',
+        headline: 'WeHo Condo Rents Rise 14% as Buyer Conversion Slows',
+        summary: 'Renters in West Hollywood are opting to stay put as elevated mortgage rates slow the rent-to-own conversion. Average 1BR rents hit $3,200/mo, pushing landlord yields up 8% YoY.',
+        source: 'Apartment List',
+        recency: '12h ago',
+        market: 'West Hollywood',
+    },
+    // Bel Air local stories
+    {
+        id: 'news-bla-1',
+        hot: false,
+        category: 'Local Data',
+        headline: 'Bel Air Estate Sales Top $45M Average in February',
+        summary: 'February estate transactions in Bel Air averaged $45M per sale, with three off-market deals contributing to record monthly volume. International buyers accounted for 40% of purchases.',
+        source: 'Mansion Global',
+        recency: '1d ago',
+        market: 'Bel Air',
+    },
+    {
+        id: 'news-bla-2',
+        hot: true,
+        category: 'Trends',
+        headline: 'Bel Air Spec Home Inventory at 5-Year Low',
+        summary: 'Speculative luxury builds in Bel Air have dropped to the lowest inventory in five years. With only 7 completed spec homes currently listed, buyers face limited options in the $20M+ segment.',
+        source: 'The Real Deal',
+        recency: '8h ago',
+        market: 'Bel Air',
     },
 ]
 

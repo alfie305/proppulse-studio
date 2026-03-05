@@ -32,6 +32,99 @@
     margin-bottom: 10px;
 }
 
+/* Market filter tabs */
+.market-filter-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 10px;
+}
+
+.market-tabs {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    flex: 1;
+    min-width: 0;
+}
+
+.market-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 3px 9px;
+    border-radius: var(--radius-full);
+    border: 1px solid var(--border);
+    background: transparent;
+    font-size: 0.6875rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: var(--transition);
+    white-space: nowrap;
+}
+
+.market-tab:hover {
+    border-color: rgba(168, 85, 247, 0.3);
+    color: var(--text-secondary);
+    background: var(--bg-hover);
+}
+
+.market-tab.active {
+    border-color: var(--accent);
+    background: var(--accent-dim);
+    color: var(--accent);
+    font-weight: 600;
+}
+
+.market-manage-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 0.6875rem;
+    color: var(--text-muted);
+    text-decoration: none;
+    padding: 3px 7px;
+    border-radius: var(--radius-full);
+    border: 1px solid transparent;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: var(--transition);
+}
+
+.market-manage-link:hover {
+    color: var(--text-secondary);
+    border-color: var(--border);
+    background: var(--bg-hover);
+}
+
+.news-empty {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 16px 12px;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    line-height: 1.5;
+    border-radius: var(--radius-md);
+    background: var(--bg-surface-2);
+    border: 1px dashed var(--border);
+}
+
+/* News skeleton shimmer */
+.news-skeleton {
+    height: 72px;
+    border-radius: 8px;
+    background: linear-gradient(90deg, var(--bg-surface-2) 25%, var(--bg-hover) 50%, var(--bg-surface-2) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s infinite;
+}
+
+@keyframes shimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
 /* News list */
 .news-list {
     display: flex;
@@ -42,7 +135,7 @@
 .news-card {
     width: 100%;
     background: var(--bg-surface-2);
-    border: 1px solid var(--border-subtle);
+    border: 1px solid var(--border);
     border-radius: var(--radius-md);
     padding: 12px;
     text-align: left;
@@ -54,13 +147,13 @@
 }
 
 .news-card:hover {
-    border-color: rgba(43, 238, 121, 0.25);
+    border-color: rgba(168, 85, 247, 0.25);
     background: var(--bg-hover);
 }
 
 .news-card.selected {
-    border-color: rgba(43, 238, 121, 0.5);
-    background: rgba(43, 238, 121, 0.06);
+    border-color: rgba(168, 85, 247, 0.45);
+    background: var(--accent-dim);
 }
 
 .news-card-top {
@@ -76,7 +169,7 @@
     gap: 3px;
     padding: 2px 7px;
     border-radius: var(--radius-full);
-    background: rgba(245, 166, 35, 0.15);
+    background: rgba(217, 119, 6, 0.10);
     color: var(--warning);
     font-size: 0.6875rem;
     font-weight: 700;
@@ -120,7 +213,7 @@
     gap: 4px;
     padding: 12px 8px;
     border-radius: var(--radius-md);
-    border: 1px solid var(--border-subtle);
+    border: 1.5px solid var(--border);
     background: var(--bg-surface-2);
     color: var(--text-secondary);
     font-size: 0.8125rem;
@@ -130,7 +223,7 @@
 }
 
 .campaign-btn:hover {
-    border-color: rgba(43, 238, 121, 0.3);
+    border-color: rgba(168, 85, 247, 0.3);
     background: var(--bg-hover);
     color: var(--text-primary);
 }
@@ -159,13 +252,13 @@
     width: 36px;
     height: 36px;
     border-radius: 50%;
-    background: linear-gradient(135deg, var(--accent), #0d8845);
+    background: linear-gradient(135deg, #A855F7, #F97316);
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 0.8125rem;
     font-weight: 700;
-    color: #09100d;
+    color: #FFFFFF;
     flex-shrink: 0;
 }
 
@@ -187,6 +280,7 @@
     gap: 0;
     overflow-y: auto;
     height: calc(100vh - 64px);
+    background: var(--bg-base);
 }
 
 /* Generate bar */
@@ -204,6 +298,7 @@
     position: sticky;
     top: 0;
     z-index: 10;
+    box-shadow: 0 1px 0 var(--border-subtle);
 }
 
 .generate-bar strong {
@@ -226,7 +321,7 @@
 /* Generation progress */
 .gen-progress-wrap {
     padding: 24px;
-    background: var(--bg-surface-2);
+    background: var(--bg-surface);
     border-bottom: 1px solid var(--border-subtle);
 }
 
@@ -247,11 +342,11 @@
 }
 
 .gen-step.done {
-    color: var(--accent);
+    color: var(--success);
 }
 
 .gen-step.active {
-    color: var(--text-secondary);
+    color: var(--accent);
 }
 
 .gen-dot {
@@ -282,11 +377,11 @@
     width: 72px;
     height: 72px;
     border-radius: var(--radius-lg);
-    background: var(--bg-surface-2);
+    background: #F3E8FF;
+    color: #7C3AED;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--text-muted);
     margin-bottom: 8px;
 }
 
@@ -336,10 +431,11 @@
     border-radius: var(--radius-lg);
     overflow: hidden;
     transition: var(--transition);
+    box-shadow: var(--shadow-card);
 }
 
 .asset-card:hover {
-    border-color: rgba(43, 238, 121, 0.3);
+    border-color: rgba(168, 85, 247, 0.25);
     transform: translateY(-2px);
     box-shadow: var(--shadow-glow);
 }
@@ -406,8 +502,8 @@
     position: absolute;
     top: 8px;
     left: 8px;
-    background: rgba(0, 0, 0, 0.6);
-    color: rgba(255, 255, 255, 0.7);
+    background: rgba(0, 0, 0, 0.5);
+    color: rgba(255, 255, 255, 0.8);
     font-size: 0.625rem;
     font-weight: 700;
     padding: 2px 7px;
@@ -456,7 +552,7 @@
     border-radius: var(--radius-md);
     overflow: hidden;
     min-width: 180px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    box-shadow: var(--shadow-float);
     z-index: 50;
     animation: fadeIn 0.15s ease;
 }
@@ -492,6 +588,7 @@
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
     padding: 20px;
+    box-shadow: var(--shadow-card);
 }
 
 .caption-header {
@@ -520,11 +617,11 @@
 
 .hashtag-chip {
     padding: 3px 10px;
-    background: var(--bg-surface-2);
-    border: 1px solid var(--border);
+    background: #F3E8FF;
+    border: 1px solid rgba(124, 58, 237, 0.15);
     border-radius: var(--radius-full);
     font-size: 0.75rem;
-    color: var(--accent);
+    color: #7C3AED;
 }
 
 @media (max-width: 1200px) {

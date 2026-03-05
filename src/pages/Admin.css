@@ -84,8 +84,8 @@
 }
 
 .stat-trend.up {
-    background: rgba(43, 238, 121, 0.12);
-    color: var(--accent);
+    background: rgba(22, 163, 74, 0.10);
+    color: var(--success);
 }
 
 .stat-trend.down {

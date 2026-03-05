@@ -1,0 +1,21 @@
+{
+  "firestore": {
+    "database": "(default)",
+    "location": "us-central1",
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "auth": {
+    "providers": {
+      "emailPassword": true,
+      "googleSignIn": {
+        "oAuthBrandDisplayName": "PropPulse Studio",
+        "supportEmail": "zerosum85@gmail.com",
+        "authorizedRedirectUris": [
+          "http://localhost:5173",
+          "http://localhost:3000"
+        ]
+      }
+    }
+  }
+}
