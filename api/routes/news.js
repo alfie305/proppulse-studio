@@ -1,5 +1,5 @@
 const express = require('express')
-const { fetchStories } = require('../services/perigon')
+const { fetchStories } = require('../services/newsapi')
 const { writeNewsCache, db } = require('../services/firestore')
 
 const router = express.Router()
